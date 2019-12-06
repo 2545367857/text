@@ -1,0 +1,32 @@
+设置唯一地址URL路由和视图
+
+一 路由设计
+路由，或者叫地址，也叫URL，就是进入相应地址，会产生相应视图
+这里设计主要由四种URL 
+index主页 login登陆页面 register注册页面 logout注销页面
+
+并且要实现
+未登录 无论访问哪个URL 都会自动跳转到login页面
+登陆人员 访问login会跳转到index主页 且不能直接访问注册页面，必须先通过logout注销
+登出后 自动跳转login页面
+
+首先在mysite/urls.py文件中设置URL路径
+    先从login中导入views模块 from login import views
+    再在urlpatterns中添加四个路径 并且指向views中相应位置
+
+二 构架初步视图
+路由设置完后，理论上已经可以让相应地址能够访问 但访问之后没有视图 因此需要再编写视图
+
+在login/views中编写视图
+
+大致编写内容是 先从django/shortcuts文件中导入redirect（重定向）模块
+
+  然后定义四个函数  参数是request需求 如果pass通过 则会返回下面render提供的页面
+  最后一个是logout注销 通过会redirect重返回到login页面
+
+三 创建html页面文件 
+初步视图已经建立，可以插入页面了
+
+首先 在login中创建一个templates目录，再在里面创建一个login目录 防止命令冲突
+然后 在login中建立三个html文件 并且设置代码
+创建完后就可以开启服务器进行访问

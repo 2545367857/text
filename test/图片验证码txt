@@ -1,0 +1,27 @@
+为了防止机器人恶意登陆，可以设置图片验证码
+
+可以直接使用django的开发库captcha
+
+1 使用pip安装 pip install django-simple-captcha
+2 注册captcha
+    在settings中 将captcha注册到app中
+    在执行migrate 生成captcha独立数据表 :python manage.py migrate
+3 添加url路由路径  在urlspy中增加captcha对于url路径
+    首先导入模块 from django.urlls import include  
+    在添加路径 path('captcha/', include('captcha.urls'))
+4 修改forms.py 添加Captchafield
+    先导入captchafiled  : from captcha.fields import 添加Captchafield
+    然后添加class ：captcha = CaptchaField(label='验证码')
+5 在login.html中添加captcha
+  {% if login_form.captcha.errors %}
+                    <div class="alert alert-warning">{{login_form.captcha.errors}}</div>
+     //这里的login_form.captcha.errors是用于判断用户验证码是否正确的
+
+6 查看效果 在登陆页面中查看
+
+//注 修改captcha后 要把username,password修改html格式为
+<div class="form-group">
+                    {{ login_form.password.label_tag }}
+                    {{ login_form.password }}
+//通过图表格式导入信息，否则会导致html和图表同时导入信息，造成多个username和password
+

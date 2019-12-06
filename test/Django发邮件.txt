@@ -1,0 +1,27 @@
+完成登录，正常情况下会发送邮件给注册用户，当然Django也有这个效果
+1 利用python自带的smtp邮件发送模块，在django上封装
+2 在setting中设置配置邮件发送参数
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  //这指定邮件后端模块
+    EMAIL_HOST = 'smtp.sina.com' //发送smtp服务器地址，这里选择新浪
+    EMAIL_PORT = 25   //smtp服务器窗口，默认25   //注意 是PORT 不是POST
+    EMAIL_HOST_USER = 'xxx@sina.com' //你发送服务器的用户名
+    EMAIL_HOST_PASSWORD ='xxxxxxx' //对应用户密码
+
+3 测试
+    在项目mysite下新建一个send_mail.py文件 //注意 send_mail.py不是app的子文件，它是独立运行的，不应该放在app目录下，所以要放在根目录下 不然无法找到mysite模块
+    import os
+    from django.core.mail import send_mail //这里要找到Mysite模块，需要把send mail 文件放在mysite根目录下，否则无法找到
+
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'//这里是通过os模块使得sendmail和django环境连接起来
+
+    if __name__ == '__main__':
+
+    send_mail(
+        '来自老子的测试邮件', //邮件主题
+        'ALL,BLG',  //具体内容
+        'zhangkuangdongfa@sina.com' //邮件发送方
+        ['xxx@qq.com']  //接受方
+    )
+
+//注意 这里用新浪邮箱发邮件，首先要在要邮箱内设置可以通过SMTP发送邮件，才能发送，否则不能发送
+//并且需要用设置SMTP后获得的授权码来修改setting中的password 我这里的授权码是bbb6a068df624e62

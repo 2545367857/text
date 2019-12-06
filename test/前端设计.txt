@@ -1,0 +1,33 @@
+一 前端设计
+也就是html设计 这里主要是让用户能够看到一个好看的界面
+
+先修改login页面
+注意一些标签：
+<form>：表示ulr路径和传送方式method
+<label>：提供前导提醒，方便触屏
+<placeholder>：输入框
+<autofocus>：自动聚焦 进行输入时会放大居中输入项
+<required>：必填项
+<input>:内部输入，不会显示密码明文
+
+二 引入Bootstrap4框架
+单纯的html过于单调简单，不适合作为主页
+而添加CSS或者JS太过麻烦，因此可以添加bootstrap4 用已经有的预设框架进行网页设计
+
+也可以直接外部导入
+插入标签：
+<link href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"> //css
+
+<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script> //js
+
+Bootsrap依赖支持
+
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script> //jquery
+
+<script src="https://cdn.bootcss.com/popper.js/1.15.0/umd/popper.js"></script> //popper.js
+
+三 添加静态文件
+静态文件 即背景等一些不会改变的文件
+先在login下创建static 再在static中创建login //这样做有利于app的重复使用，并且产生路径冲突
+在login中再创建css和image文件 在image中导入背景图片
+

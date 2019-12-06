@@ -1,0 +1,89 @@
+登陆界面已经完成，现在设计注册界面
+
+一 创建forms
+在forms中新建一个模型子类
+class RegisterForm(forms.Form):
+    gender = (
+        ('male','男'),
+        ('femal','女'),
+    )//定义一个函数gender 内容为男和女
+    username = forms.CharField(label="用户名", max_length=128, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    password1 = forms.CharField(label="密码", max_length=256, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password2 = forms.CharField(label="确认密码", max_length=256, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    //设置三个字符区域，标签显示为所输入内容                                                                                                
+    email = forms.EmailField(label="邮箱地址", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    //设置邮箱区域
+    sex = forms.ChoiceField(label='性别', choices=gender)
+    //设置选择领域，元素为choices选择，从gender中选择
+    captcha = CaptchaField(label='验证码')
+
+二 完善register.html
+    类似login.html，在register.html中编写
+
+    代码中编写了一个 register.css内容 
+    form标记中action地址为/register/
+    class改为form-register
+    表单from传递设置为register_form
+    连接直接修改登陆连接
+
+    然后再顺便创建一个register.css
+
+三 实现注册视图
+模型也有了，html也好了，现在该调整views了
+
+def register(request):
+    if request.session.get('is_login', None)://如果接收到session登陆信息，则进入主页
+        return redirect('/index/')
+
+    if request.method == 'POST':
+        register_form = forms.RegisterForm(request.POST)
+        message = "请检查填写的内容！"
+        if register_form.is_valid()://使得表达有效
+            username = register_form.cleaned_data.get('username')//这里通过cleaned_data获得数据，来验证输出信息
+            password1 = register_form.cleaned_data.get('password1')
+            password2 = register_form.cleaned_data.get('password2')
+            email = register_form.cleaned_data.get('email')
+            sex = register_form.cleaned_data.get('sex')
+
+            if password1 != password2://比较2次密码
+                message = '两次输入的密码不同！'
+                return render(request, 'login/register.html', locals())
+            else:
+                same_name_user = models.User.objects.filter(name=username)
+                if same_name_user://用户名获得相同数据
+                    message = '用户名已经存在'
+                    return render(request, 'login/register.html', locals())
+                same_email_user = models.User.objects.filter(email=email)
+                if same_email_user://相同邮箱
+                    message = '该邮箱已经被注册了！'
+                    return render(request, 'login/register.html', locals())
+
+                new_user = models.User()
+                new_user.name = username
+                new_user.password = password1
+                new_user.email = email
+                new_user.sex = sex
+                new_user.save()
+                //这里使用ORM的API，进行新用户模型创建，最后save保存
+                return redirect('/login/')
+        else:
+            return render(request, 'login/register.html', locals())
+    register_form = forms.RegisterForm()
+    return render(request, 'login/register.html', locals())
+
+四 密码加密
+目前使用的密码都是明文密码，可以被查看的，所以要设置加密
+加密方式
+1 在login/views中编写一个hash函数
+    首先导入 hashlib   : import hashlib
+    def hash_code(s, salt='mysite'):
+    h = hashlib.sha256()
+    s += salt
+    h.update(s.encode())
+    return h.hexdigest()
+    这里使用sha256算法，对密码进行加密
+
+2 修改Login()和register()的视图
+
+将password = password 改成 passwor = hash_code(password) 修改为加密密码
+//这里就可以删除之前的所有密码了，因为他们没有hash加密，然后再注册账号 查看密码 已经成为一串乱码

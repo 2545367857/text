@@ -1,0 +1,56 @@
+Django表单作用
+1 准备和重构数据用于页面渲染 //CSS JS 等
+2 为数据创建HTML表单元素
+3 接受和处理用户从表单发来的数据
+
+一 创建表单模型
+在Login下新建 forms.py
+和models差不多 先从django导入forms  
+form django import forms
+设置一个Userform表单子类 并且设置里面参数username和password
+然后设置内部参数 label标签 和最长长度， 而widge=forms.passwordinput则是指定该字段在from中表示密码输入框，会有圆点隐藏密码
+
+二 修改视图
+编写好的表单要导入views中才能生效
+首先在views中导入 from . import froms
+
+再在原来使用模型的地方修改为
+login_form = forms.UserForm(request.POST)//使用表单验证
+        message = '请检查填写内容！'
+        
+        if login_form.is_valid()://表单生效验证 is_valid是django自带验证系统
+            username = login_form.cleaned_data.get('username')
+            password = login_form.cleaned_data.get('password')
+            //在表单中查询内容
+            同时用local()代替{{message:'message'}}
+            local可以返回所有的字典变量 而render中包括的message信息属于数据字典参数量，都可以通过这样方式导入
+            使得输入的message能在html中渲染
+
+三，修改login.html页面
+在views中修改的数据 需要在页面中体现。
+在html中添加一个{{ login_form }} 即可完成表单生成工作 //注意 是{{}}  不是{%%} 也不是{{%%}}
+而使用POST 需要添加{% csrf_token %}用于处理csrf检测问题
+
+djiango对每个input元素都会生成一个id 对应label for 的参数名
+但注册连接和登陆按钮需要自己写
+
+//django form的作用是 自动生成html语言的form格式，就不再需要自己编写form表格，方便管理
+
+//除了 {{ login_form }} 相当于生成一个<table>
+还有{% login_form.as_table%}  生成<tr>
+{% login_form.as_p%} 生成<p>
+{% login_form.as_ul%} 生成<li>
+
+但这些都只是渲染相应标签，相当于CSS的标记选择器，在html中需要自己添加相应标签
+
+四 手动渲染
+直接{{ login_form}}虽然方便，但页面不是很好看，并且bootstraps4无法使用，因此需要手动渲染字段
+
+通过{{ login_form.name_of_field}} 获得每个字段，然后分别渲染 //???
+
+但这样bootstrap还是没有生效，需要在form文件里再添加attr属性
+    username = forms.CharField(label="用户名", max_length=128, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Username",'autofocus': ''}))
+    password = forms.CharField(label="密码", max_length=256, widget=forms.PasswordInput(attrs={'class': 'form-control','placeholder': "Password"}))
+
+注意：文本信息必须用"" 不能用'' 只有指令能用''  另外不要把-打成_ 在python两者意义不同
+

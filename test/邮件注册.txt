@@ -1,0 +1,129 @@
+一 创建模型
+通过发送邮件验证注册，和之前登陆模块一样，一样需要一个模型
+在Models中
+    给user模型添加一个has_confirmed字段 ：has_confirmed = models.BooleanField(default=False)
+    //这个字段是一个boolean布尔值(只有真 ture 和 假 false的值 ) 默认为flase 也就是未进行注册
+
+然后在新建一个模型子类
+class ConfirmString(models.Model)://这个模型保存了用户和注册码的关系，
+    code = models.CharField(max_length=256)//这里是哈希后的注册码
+    user = models.OneToOneField('User', on_delete=models.CASCADE) // one to one 一对一模型
+    c_time = models.DateTimeField(auto_now_add=Ture) //c time 是注册提交时间
+
+    def __str__(self):
+        return self.user.name + ":  " + self.code
+
+    class Meta:
+
+        ordering = ["-c_time"]
+        verbose_name = "确认码"
+        verbose_name_plural = "确认码" 
+
+创建完后，转移一下数据表
+1 先创建一个模型改变新表  python manage.py makemigrations
+2 把新建模型表的数据导入成数据表 python manage.py migrate
+
+模型确定后 修改一下admin.py文件
+添加一句 admin.site.register(models.ConfirmString) //在admin页面管理邮箱验证码情况
+
+二 修改视图
+有了模型，要在视图中使用才行
+先导入时间模块 import datetime
+再在register()中
+添加code = make_confirm_string(new_user)// make_confirm_string是创建确定码对象的方法 它会接收一个新用户对象为参数，利用datetime模块生成一个当前时间的字符串now，再通过hash_code方法以用户名为基础，now为salt，生成一个独一无二的哈希值 通过confirmstring模型的create方法，再生成一个保存确定码的对象，最后返回这个哈希值
+    send_email(email, code) //这个方法可以接收到生成的两个参数，分别是注册的邮箱和前面生成的哈希code值
+
+全部： code = make_confirm_string(new_user)
+                send_email(email, code)
+
+                message = '请前往邮箱进行确定!'
+                return render(request, 'login/confirm.html', locals())// 这句也要加！
+        else:
+            return render(request, 'login/register.html', locals())
+                message = '请前往邮箱进行确定!'
+
+
+
+再在views中添加：
+from django.conf import settings //首先导入setting配置文件
+
+def send_email(email, code):
+
+    from dejango.core.mail import EmailMultiAlternatives
+
+    suject = '来自劳资的注册确定邮件'
+
+    text_content = ''' 如果你看到这条消息，说明你的邮箱不提供HTML连接功能，请联系管理员！'''
+
+    html_content = ''' 
+                    <p>感谢注册<a href="http://{}/confirm/?code={}" target=blank>www.text.com</a>,\
+                    这里是测试</p>
+                    <p>请点击站点连接完成注册确定</p>
+                    <p>此连接有效期限为{}天</p>
+                     '''.fomat('127.0.0.1:8000', code, settings.CONFIRM_DAYS)//fomat是一种格式化函数，会格式化{}内元素的值，\
+        //如果是空{} 则会直接输出值 如果是{n} 则会按顺序输出，这里都是空格 是按顺序输出 地址 code setting.CONFIRM_DAYS
+
+    msg = EmailMultiAlternatives(suject, text_content, settings.EMAIL_HOST_USER, [email])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
+视图内没问题，就去修改setting配置
+添加一句 CONFIRM_DAYS = 7 这样fomat在导入settings.CONFIRM_DAYS时 会就在setting中直接取值
+
+三 处理邮件确定请求
+
+在根目录urls.py内添加一条路径: path('confirm/', views.user_confirm),
+
+再在views.py内添加一个 user_confirm视图
+def user_confirm(request):
+    code = request.GET.get('code', None) //通过request.get.get从url路径中获得确定码
+    message = ''
+    try:
+        confirm = models.confirmSring.objects.get(code=code)//在数据库中查询是否有对应确定码，
+    except:
+        message = '无效的确定请求'
+        return render(reques, 'login/confirm.html', locals())//如果没有，返回confirm,html页面，并且提示
+
+    c_time = confirm.c_time
+    now = datetime.datetime.now()
+    if now > c_time + datetime.timedelta(settings.CONFIRM_DAYS):
+        confirm.user.delete()                                       //过期删除用户名，同时删除注册码
+        message = '您的邮件已过期，请重新注册'
+        return render(request, 'login/confirm.html',locals())
+    else:                             //未过期，修改has_confirmed为True 并且保存，通过验证，删除注册码，
+        confirm.user.hash_confirmed = True
+        confirm.user.save()
+        confirm.delete() //删除注册码但不删除用户
+        messsage = '感谢确定，请用账号登陆！'
+        return render(request, 'login/confirm.html', locals())
+
+现在创建一个confirm.html页面
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册确认</title>
+</head>
+<body>
+
+
+    <h1 style="margin-left: 100px;">{{ message }}</h1>
+
+    <script>
+        window.setTimeout("window.location='/login/'",2000); //这里通过js 2秒钟自动跳转登陆页面
+    </script>
+
+</body>
+</html>
+
+
+四 修改登陆规则
+没有邮件确定用户不能登陆，则需要修改登陆规则
+修改views里面的login视图
+添加 if not user.has_confirmed: //进行user.has_confirmed确定 是has 已经 不是hash 哈希值
+                message = '该用户还未进行邮件确定！'
+                return render(request, 'login/login.html', locals())
+
+五 运行 
+1 删除所有用户
+2 注册确认

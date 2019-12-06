@@ -1,0 +1,15 @@
+admin后台 即管理后台 是Django默认提供我们的app 方便管理和测试应用
+
+一 在admin中注册模型
+在setting中 admin模型已经注册 在INSTALLED_APPS中可以找到 并且其中的sessions会话模型 之后也会用到
+
+然后在login/admin.py中创建模型，就能使用了
+
+模型内容为 先从同级目录下导入models 然后创建一个register(注意小写)注册模型 引用模型user
+
+二 创建OP
+管理后台已经注册，需要有管理员OP 那么注册一个管理员
+python manage.py createsuperuser //创建一个超级管理员
+
+三 使用后台
+运行服务器 在/admin中登陆

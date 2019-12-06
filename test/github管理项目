@@ -1,0 +1,40 @@
+GitHub是一个开源的托管服务，有点像代码的云。
+它以各种不同的编程语言托管您的源代码项目，并跟踪每次迭代所做的各种更改。
+该服务可以通过使用git（一种在命令行界面中运行的修订控制系统）来完成此操作。
+
+//github就是一个保存代码的云盘，对于不需要保护的代码，可以把项目上传到github进行保存
+
+一 创建requirement.txt文件
+用pipi的freeze工具自动生成 : pip freeze > ./requirements.txt
+他人如果使用我们的代码，要安装第三方库依赖的话，只需要： pip install -r requirements.txt即可
+
+二 创建.gitignore文件
+gitignore文件是让git自动忽略一些密码文件，和临时文件，进行选择上传的工具
+
+1 首先在根目录下新建一个.gitignore文件
+2 下载.ignore插件
+3 在.gitignore文件内输入
+
+
+.gitignore
+venv
+.idea
+settings.py
+db.sqlite3
+mysite/__pycache__/ 
+
+//这些文件不会被上传到github中，也不会进行版本管理
+
+三 特殊文件处理
+    将settings文件进行复制，命名为setting.example.py，删除其中重要的信息
+
+四 添加说明文件和许可文件
+    在Github中添加说明文件和许可文件
+1 说明文件
+    在根目录下创建一个README.md 这是一个markdown标记文件 可以写入一切需要说明
+
+2 许可文件
+    许可文件LICENSE，怎么弄我也不知道
+
+五 上传代码
+将项目上传到github官网，并取名为login-register //确定保密文件是否上传

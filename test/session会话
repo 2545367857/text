@@ -1,0 +1,115 @@
+session类似于cookie 是用来保存识别用户数据的一些信息的
+不过cookie通常保存在本地，主要是一些简单的信息
+而seesion保存在服务器端，而保存信息也是十分重要的
+
+通常session的保存路径有
+1 保存到数据库
+2 保存到缓存
+3 保存到文件内
+4 保存到cookie
+
+而第四种通常不会使用
+
+django自带session框架，
+可以查看setting.INSTALLED_APPS中 是否存在 django.contrib.sessions
+以及MIDDLEWARE 是否存在 jango.contrib.sessions.middleware.SessionMiddleware
+session启动后，传递给视图request参数的HttpRequest对象就会包涵一个session属性，
+这个reques.session属性可以在Django任何位置读写，编辑使用 
+
+下面是session使用的方法：
+class backends.base.SessionBase
+        # 这是所有会话对象的基类，包含标准的字典方法:
+        __getitem__(key)
+            Example: fav_color = request.session['fav_color']
+        __setitem__(key, value)
+            Example: request.session['fav_color'] = 'blue'
+        __delitem__(key)
+            Example: del request.session['fav_color']  # 如果不存在会抛出异常
+        __contains__(key)
+            Example: 'fav_color' in request.session
+        get(key, default=None)
+            Example: fav_color = request.session.get('fav_color', 'red')
+        pop(key, default=__not_given)
+            Example: fav_color = request.session.pop('fav_color', 'blue')
+
+ # 类似字典数据类型的内置方法
+        keys()
+        items()
+        setdefault()
+        clear()
+
+
+        # 它还有下面的方法：
+        flush()
+            # 删除当前的会话数据和会话cookie。经常用在用户退出后，删除会话。
+
+        set_test_cookie()
+            # 设置一个测试cookie，用于探测用户浏览器是否支持cookies。由于cookie的工作机制，你只有在下次用户请求的时候才可以测试。
+        test_cookie_worked()
+            # 返回True或者False，取决于用户的浏览器是否接受测试cookie。你必须在之前先调用set_test_cookie()方法。
+        delete_test_cookie()
+            # 删除测试cookie。
+        set_expiry(value)
+            # 设置cookie的有效期。可以传递不同类型的参数值：
+        • 如果值是一个整数，session将在对应的秒数后失效。例如request.session.set_expiry(300) 将在300秒后失效.
+        • 如果值是一个datetime或者timedelta对象, 会话将在指定的日期失效
+        • 如果为0，在用户关闭浏览器后失效
+        • 如果为None，则将使用全局会话失效策略
+        失效时间从上一次会话被修改的时刻开始计时。
+
+        get_expiry_age()
+            # 返回多少秒后失效的秒数。对于没有自定义失效时间的会话，这等同于SESSION_COOKIE_AGE.
+            # 这个方法接受2个可选的关键字参数
+        • modification:会话的最后修改时间（datetime对象）。默认是当前时间。
+        •expiry: 会话失效信息，可以是datetime对象，也可以是int或None
+
+        get_expiry_date()
+            # 和上面的方法类似，只是返回的是日期
+
+        get_expire_at_browser_close()
+            # 返回True或False，根据用户会话是否是浏览器关闭后就结束。
+
+        clear_expired()
+            # 删除已经失效的会话数据。
+        cycle_key()
+            # 创建一个新的会话秘钥用于保持当前的会话数据。django.contrib.auth.login() 会调用这个方法。
+
+一 使用session
+    首先修改login.views视图
+    首先插入
+    if request.session.get('is_login', None): //从session中获得is_login的信息   表示已经登录
+        return redirect('/index/')            //则会自动返回主页 不会在继续登录
+        //这句代码用于防止用户重复登录
+
+    然后再写入：
+                if user.password == password:
+                    request.session['is_login'] = True
+                    request.session['user_id'] = user.id
+                    request.session['user_name'] = user.name
+                    print(username,password)
+                    return redirect('/index/')
+                    //这句话表示，如果密码验证通过，则会开放session is_login信息 并且在session中设置user_id和user_name
+                    //注意，这里的is_login不是内部函数，而是我们这里自定义为True的函数
+                    //通过['函数'] = 值 定义函数，
+                    //再用get('函数', )得到函数
+   
+    //补充 关于字典的含义。字典在python是一种可变容器模型，可以存储任意类型的对象，
+    通过定义 a = {'键': 键值，} 来定义字典a  而在输出时通过 a['键']来输出键值，相当于一种指针集合，用指针指定对象输出
+
+    拥有session记录登陆状态后，就可以设计logout视图 来完成登出效果
+    if not requestion.get('is_login',None): //如果没有接收到session的登陆信息，则无法登出，自动弹回登陆页面
+        return redirect('/login/')
+    request.session.flush() //如果接收到session登陆信息，则清空该账户的session信息，并且回到登陆页面
+
+    二 在index中验证登陆
+    有了用户状态，则登陆和未登录用户，在index页面上访问情况应该有所区别，因此需要修改index界面
+
+    修改index为
+        <h1>{{ request.session.user_name }}！ 欢迎回来 ！</h1> //这里reques.session.user_name是你登陆时注册的名字，通过views导入到html中
+            <p> <a href="/logout/">登出</a> //这里设置了一个超链接 指向logout
+
+    再在index的views中设置限制
+    def index(request):
+    if not request.session.get('is_login',None)://如果没有获得session登陆信息，则返回登陆界面，否则就进入index界面
+        return redirect('/login/')
+    return render(request, 'login/index.html')

@@ -1,0 +1,60 @@
+前端网页通过html,css和js 以及bootstrap即可完成，但是这只是个静态窗口，并没有用户数据交互。
+因此我们要实现网页与数据库之间的数据交互
+
+首先是让用户登陆资料能够以post方式发到服务器
+在login/views中修改login函数
+
+函数解释：
+def login(request): //增加函数
+    if request.method =="POST": //实现参数方法是POST
+        username = request.POST.get('username') //输入用户名通过POST方式得到
+        password = request.POST.get('password')//输入密码通过POST方式得到
+        print(usearname,password)//在终端显示用户名和密码
+        return redirect('/index/')//进入主页
+    return reder(request,'login/login.html')//如果通过POST无法获得用户名密码，则返回登陆页面
+
+
+关于CSRF 
+一种跨站请求伪造 在之前网页中没有设置，被django识别错误，
+因此 在login的form插入{% csrf_token %}
+使得CSRF识别生效
+
+登陆同时 终端这里会提示显示用户名和密码 并且告知访问情况
+
+二 数据验证
+数据验证分为两种，前端网页认证 和 后端服务器验证
+而前端网页认证可以通过JS来实现，一般是一些强制性填的对象和所填对象格式之类的验证。
+如字段不能为空 密码用原点表示
+
+而后端服务器验证需要编写login代码 在views中
+添加 if usearname.strip() and passowrd:
+        return redirect('/index/')
+        //通过这个指令，让用户名和密码不能为空，必须有才可以判断
+        //添加strip 可以消除用户名前后无效的空格
+
+三 验证用户名和密码
+通过用户名，利用Django的ORM去数据库中查询，如果有，则进行密码对比，比对错误，则密码错误
+反之没有用户名，同样无法查询
+
+在views中编写login代码，
+首先导入Models  from . import models
+然后在之前验证系统下面补充
+try :
+    user = models.User.objects.get(name=username) //这里是Django中常用数据查询的方式。
+except:
+    return render(request,'login/login.html')//这里是进行身份验证，如果用户名存在，则进行下一步，如果不存在，返回Login
+if usear.passowrd == passwork:
+    return redirect('/index/') //验证密码是否一致
+
+四 添加提示信息
+给登陆成功或者失败一些补充信息
+修改login视图
+直接添加message = '文本内容'
+在render中插入{'message':message} 是为了方便在html中直接渲染message信息
+接下来在html中修改提示信息CSS 用之前render中插入的来匹配
+代码：
+    {% if message %}
+        <div class="alert alert-warning">{{message}}</div>
+    {% endif %} 
+    将视图中表示的Message插入html中
+    //注 django的模板语言 {% if xxx%}  {% endif %} {% else %}

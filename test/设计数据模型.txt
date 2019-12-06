@@ -1,0 +1,27 @@
+一 对模型的设置
+1 在models中建立模型
+其中一些尚未了解的设置
+设置 参数 = 模型区域(添加设置) //
+添加设置中
+unique=True 表示必填unique 开启true
+auto_now_add=True 表示时间自动显示 开启
+choices=gender 引用了一个gender的choices 所用参数值都会从gender中选择 并且default 默认值为男
+
+模型区域
+charfield 字符区域
+emailField 邮箱区域
+DateTimeFiled 数据时间区域
+
+2 并且设置了一个函数__str__ 会自动返回显示名字
+
+3 再设置了一个子类meta 这个我还没接触
+
+二 对数据库操作
+采用默认SQL数据库 并没有进行修改
+
+三 注册app
+在setting文件中的INSTALLED_APPS中 添加app的名称
+
+四 激活app 创建记录和数据表
+python manage.py makemigrations //创建迁移文件
+python manage.py migrate //将迁移文件导入数据库
